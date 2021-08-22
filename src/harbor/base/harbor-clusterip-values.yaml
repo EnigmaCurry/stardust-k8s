@@ -1,0 +1,6 @@
+expose:
+  type: clusterIP
+  tls:
+    auto:
+      commonName: harbor
+externalURL: https://harbor

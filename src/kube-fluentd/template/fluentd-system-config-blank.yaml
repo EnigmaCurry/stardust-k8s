@@ -1,0 +1,11 @@
+apiVersion: logs.vdp.vmware.com/v1beta1
+kind: FluentdConfig
+metadata:
+  name: fd-config
+  namespace: fluentd-system
+spec:
+  fluentconf: |
+    <format>
+      @type json
+    </format>
+

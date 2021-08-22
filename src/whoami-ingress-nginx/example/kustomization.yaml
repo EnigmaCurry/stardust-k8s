@@ -1,0 +1,5 @@
+# Development environment
+resources:
+- ./../base
+- whoami-ingress.yaml
+- cert-manager-issuer.yaml

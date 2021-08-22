@@ -1,0 +1,54 @@
+# Traefik Helm values
+# Make sure to add all necessary ACME DNS environment variables at the bottom.
+image:
+  name: traefik
+  tag: "v2.5"
+persistence:
+    enabled: true
+additionalArguments:
+  # - "--log.level=DEBUG"
+  ## ACME config
+  # - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"
+  # - "--certificatesresolvers.letsebcrypt.acme.tlschallenge=true"
+  # - "--certificatesresolvers.letsencrypt.acme.email=$(ACME_EMAIL)"
+  # - "--certificatesresolvers.letsencrypt.acme.caserver=$(ACME_CA_SERVER)"
+  ## Consul config:
+  # # Enable Traefik to use Consul Connect:
+  # - "--providers.consulcatalog.connectAware=true"
+  # # Traefik routes should only be created for services with explicit `traefik.enable=true` service-tags:
+  # - "--providers.consulcatalog.exposedByDefault=false"
+  # # For routes that are exposed (`traefik.enable=true`) use Consul Connect by default:
+  # - "--providers.consulcatalog.connectByDefault=true"
+  # # Rename the service inside Consul: `traefik-system-ingress`
+  # - "--providers.consulcatalog.servicename=traefik-system-ingress"
+  # # Connect Traefik to the Consul service:
+  # - "--providers.consulcatalog.endpoint.address=consul-server.consul-system.svc.cluster.local:8500"
+  # - "--providers.consul.endpoints=consul-server.consul-system.svc.cluster.local:8500"
+  # # The key name in Consul KV that traefik will watch:
+  # - "--providers.consulcatalog.prefix=traefik"
+service:
+  annotations:
+    # # Register the service in Consul as `traefik-system-ingress`:
+    # consul.hashicorp.com/service-sync: "true"
+    # consul.hashicorp.com/service-name: "traefik-system-ingress"
+deployment:
+  initContainers:
+    ## volume-permissions makes sure /data volume is owned by the traefik security context 65532
+    - name: volume-permissions
+      image: busybox:1.31.1
+      command: ["sh", "-c", "chown -R 65532:65532 /data && chmod -Rv 600 /data && chmod 700 /data"]
+      volumeMounts:
+        - name: data
+          mountPath: /data
+env:
+  ## All ACME variables come from traefik-acme-secret:
+  # - name: ACME_EMAIL
+  #   valueFrom:
+  #     secretKeyRef:
+  #       name: traefik-acme-secret
+  #       key: ACME_EMAIL
+  # - name: ACME_CA_SERVER
+  #   valueFrom:
+  #     secretKeyRef:
+  #       name: traefik-acme-secret
+  #       key: ACME_CA_SERVER

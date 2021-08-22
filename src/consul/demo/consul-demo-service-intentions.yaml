@@ -1,0 +1,26 @@
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: whoami
+  namespace: consul-demo
+spec:
+  destination:
+    # Name of the destination service affected by this ServiceIntentions entry.
+    name: whoami
+  sources:
+    # The set of traffic sources affected by this ServiceIntentions entry.
+    # When the source is the Traefik Proxy:
+    - name: traefik-system-ingress
+      # The set of permissions to apply for Traefik Proxy to access whoami:
+      # The first permission to match in the list is terminal, and stops further evaluation.
+      permissions:
+        # Allow accessing the root URL via GET only:
+        - action: allow
+          http:
+            pathExact: '/'
+            methods:
+              - GET
+        # Define a deny intention for all other traffic
+        - action: deny
+          http:
+            pathPrefix: '/'

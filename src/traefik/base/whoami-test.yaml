@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: whoami-test
+  namespace: traefik-system
+spec:
+  ports:
+  - name: web
+    port: 80
+    protocol: TCP
+  selector:
+    app: whoami-test
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: whoami-test
+  name: whoami-test
+  namespace: traefik-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: whoami-test
+  template:
+    metadata:
+      labels:
+        app: whoami-test
+    spec:
+      containers:
+      - image: containous/whoami
+        name: whoami-test
+        ports:
+        - containerPort: 80
+          name: web
+        env:
+          - name: WHOAMI_NAME
+            value: hub2usb
+

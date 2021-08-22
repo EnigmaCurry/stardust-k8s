@@ -1,0 +1,10 @@
+apiVersion: logs.vdp.vmware.com/v1beta1
+kind: FluentdConfig
+metadata:
+  name: fd-config
+  namespace: traefik-system
+spec:
+  fluentconf: |
+    <match kube.traefik-system.**>
+      @type my_s3
+    </match>

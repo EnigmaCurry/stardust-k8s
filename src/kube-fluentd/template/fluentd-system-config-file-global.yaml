@@ -1,0 +1,26 @@
+apiVersion: logs.vdp.vmware.com/v1beta1
+kind: FluentdConfig
+metadata:
+  name: fd-config
+  namespace: fluentd-system
+spec:
+  fluentconf: |
+    ### Globally match ALL pods in ALL namespaces and save to file:
+    ### [Year]/[Month]/[Day]/[namespace]/[pod_name]/[timestamp]-[container_name].log
+    ### NOTE: this prevents any other kube.** match!
+    <match kube.**>
+      @type file
+      path /var/log/fluentd/%Y/%m/%d/${$.kubernetes.namespace_name}/${$.kubernetes.pod_name}/%Y-%m-%d-%H%M-${$.kubernetes.namespace_name}_${$.kubernetes.pod_name}_${$.kubernetes.container_name}
+      <buffer time,$.kubernetes.namespace_name,$.kubernetes.container_name,$.kubernetes.pod_name>
+        path /var/log/fluentd/_buffers
+        @type file
+        timekey 120
+        timekey_wait 10s
+        timekey_use_utc true # use utc
+      </buffer>
+    </match>
+
+    <format>
+      @type json
+    </format>
+

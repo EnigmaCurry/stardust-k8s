@@ -1,0 +1,16 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: digitalocean-dns
+spec:
+  acme:
+    email: ${ACME_EMAIL}
+    server: ${ACME_CA_SERVER}
+    privateKeySecretRef:
+      name: digitalocean-dns-acme-account-key
+    solvers:
+    - dns01:
+        digitalocean:
+          tokenSecretRef:
+            name: digitalocean-dns
+            key: access-token

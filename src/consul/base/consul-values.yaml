@@ -1,0 +1,53 @@
+# consul-values.yaml   -- Consul Helm Chart Values
+global:
+  name: consul
+  datacenter: dc1
+  image: hashicorp/consul:1.10
+  imageEnvoy: envoyproxy/envoy:v1.19-latest
+  metrics:
+    enabled: true
+  tls:
+    enabled: true
+    enableAutoEncrypt: true
+    verify: true
+    serverAdditionalDNSSANs:
+      ## Add the K8s domain name to the consul server certificate
+      - "consul-server.consul-system.svc.cluster.local"
+  ## For production turn on ACLs and gossipEncryption:
+  # acls:
+  #   manageSystemACLs: true
+  # gossipEncryption:
+  #   secretName: "consul-gossip-encryption-key"
+  #   secretKey: "key"
+server:
+  # Scale this according to your needs:
+  replicas: 1
+  securityContext:
+    runAsNonRoot: false
+    runAsUser: 0
+ui:
+  enabled: true
+controller:
+  enabled: true
+prometheus:
+  enabled: true
+grafana:
+  enabled: true
+  
+connectInject:
+  # This method will inject the sidecar container into Pods:
+  enabled: true
+  # But not by default, only do this for Pods that have the explicit annotation:
+  #        consul.hashicorp.com/connect-inject: "true"
+  default: false
+syncCatalog:
+  # This method will automatically synchronize Kubernetes services to Consul:
+  # (No sidecar is injected by this method):
+  enabled: true
+  # But not by default, only for Services that have the explicit annotation:
+  #        consul.hashicorp.com/service-sync: "true"
+  default: false
+  # Synchronize from Kubernetes to Consul:
+  toConsul: true
+  # But not from Consul to K8s:
+  toK8S: false

@@ -1,0 +1,18 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: whoami-test
+  namespace: traefik-system
+  annotations:
+    hub.traefik.io/enable-acme: "true"
+spec:
+  routes:
+    - kind: Rule
+      match: Host(`whoami.example.com`)
+      services:
+      - name: whoami-test
+        port: 80
+  entryPoints:
+    - websecure
+  tls:
+    secretName: app-secret-tls
