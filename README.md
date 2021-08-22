@@ -28,6 +28,8 @@ A Kubernetes cluster configuration, featuring:
  * [Consul Connect](https://www.consul.io/docs/connect) service mesh.
    * Lock down service-to-service interactions, with Consul Intentions.
    * Traefik Proxy can provide public ingress into your service mesh.
+ * [Harbor](https://goharbor.io/) docker registry and proxy cache. Avoid Docker
+   Hub image pull rate limits by hosting a local cache.
  * [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) a
    Prometheus Operator, monitoring of all Namespaces and Pods with Grafana
    dashboard.
