@@ -1,0 +1,16 @@
+# Traefik Helm values
+image:
+  name: traefik
+  tag: "v2.5"
+additionalArguments:
+  - "--log.level=DEBUG"
+  ## Forward all HTTP to HTTPs
+  - "--entrypoints.web.http.redirections.entryPoint.to=:443"
+deployment:
+  kind: DaemonSet
+ports:
+  ## Add the wildcard certificate to the entrypoint, then all routers inherit it:
+  ## https://doc.traefik.io/traefik/routing/entrypoints/#tls
+  websecure:
+    tls:
+      enabled: true

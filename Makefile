@@ -221,6 +221,8 @@ traefik-system-init-tls-challenge:
 	helm upgrade --install -f src/traefik/base/traefik-tls-challenge-values.yaml --namespace traefik-system --create-namespace traefik traefik/traefik
 traefik-system-init-tls-default:
 	helm upgrade --install -f src/traefik/base/traefik-tls-default-values.yaml --namespace traefik-system --create-namespace traefik traefik/traefik
+traefik-system-init-tls-default-daemonset:
+	helm upgrade --install -f src/traefik/base/traefik-tls-default-daemonset-values.yaml --namespace traefik-system --create-namespace traefik traefik/traefik
 traefik-system-debug-volume:
 	source lib/k8s-util.sh
 	run_with_pvc traefik-system alpine:3 traefik /bin/sh
@@ -229,21 +231,47 @@ traefik-system-fluentd:
 traefik-system-copy-consul-certs:
 	kubectl apply -f src/traefik/base/traefik-namespace.yaml
 	kubectl get secret consul-ca-cert -n consul-system -o yaml | sed 's/namespace: consul-system/namespace: traefik-system/' | kubectl apply -n traefik-system -f -
+.ONESHELL:
 traefik-system-whoami:
+	@read -p "Enter the domain for the whoami service: " WHOAMI_DOMAIN
+	@read -p "Enter the name reported by the whoami service (eg `test`): " WHOAMI_NAME
+	export WHOAMI_DOMAIN WHOAMI_NAME
 	kubectl apply -k src/traefik/whoami
+	cat src/traefik/whoami/template/whoami-ingress.yaml | envsubst '$$WHOAMI_DOMAIN $$WHOAMI_NAME' | kubectl apply -f -
 traefik-system-dashboard:
-	kubectl -n traefik-system port-forward deploy/traefik 9000:9000 &
+	UNIT=deploy/traefik
+	if kubectl -n traefik-system get daemonset/traefik; then UNIT=daemonset/traefik; fi
+	kubectl -n traefik-system port-forward $${UNIT} 9000:9000 &
 	sleep 1 && xdg-open http://localhost:9000/dashboard/
 traefik-system-dashboard-2:
-	kubectl -n traefik-system port-forward deploy/traefik 9001:9000 &
+	UNIT=deploy/traefik
+	if kubectl -n traefik-system get daemonset/traefik; then UNIT=daemonset/traefik; fi
+	kubectl -n traefik-system port-forward $${UNIT} 9001:9000 &
 	sleep 1 && xdg-open http://localhost:9001/dashboard/
 traefik-kind-sys:
 	kubectl apply -k src/traefik/kind-sys
 traefik-hub-init:
 	helm upgrade --install hub hub/hub --namespace hub-agent
-traefik-hub-demo:
-	helm upgrade --install -f src/traefik/hub-demo/traefik-values.yaml --namespace traefik-system --create-namespace traefik traefik/traefik
-	kubectl apply -k traefik/hub-demo
+traefik-hub-get-endpoints:
+	@echo "Endpoints: "
+	kubectl -n traefik-system get svc | grep LoadBalancer | tr -s ' ' | cut -d ' ' -f 4 | sed 's/,/:443;/g' | sed -e 1's/$$/:443&/'
+.ONESHELL:
+traefik-hub-demo-acls:
+	AUTH_USERS=()
+	MORE_USERS=y
+	while [ "$${MORE_USERS,,}" = "y" ]
+	do
+		@read -p "Enter the username: " USERNAME
+		@read -p "Enter the password: " PASSWORD
+		export USERNAME PASSWORD
+		AUTH_USERS+=($$(kubectl run -n traefik-system --rm -i --tty tmp-htpasswd --image=httpd --restart=Never -- htpasswd -nbB $${USERNAME} $${PASSWORD} | head -1))
+		@read -p "Enter more users (y/N)? " MORE_USERS
+	done
+	printf -v JOINED_USERS '%s,' "$${AUTH_USERS[@]}"
+	BASIC_AUTH_USERS=$$(echo $$JOINED_USERS | sed 's/,$$//')
+	export BASIC_AUTH_USERS
+	cat src/traefik/hub/template/acp-basicauth.yaml | envsubst '$$BASIC_AUTH_USERS' | kubectl apply -f -
+	kubectl -n traefik-system get accesscontrolpolicies.hub.traefik.io whoami-test -o yaml
 
 #####################################################################
 ## whoami-ingress - an example Ingress exposed Service

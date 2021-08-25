@@ -5,15 +5,16 @@ metadata:
   namespace: traefik-system
   annotations:
     hub.traefik.io/enable-acme: "true"
+    hub.traefik.io/access-control-policy: "whoami-test@traefik-system"
 spec:
   routes:
   - kind: Rule
     #match: HostRegexp(`whoami.traefik-system.{domain:.*}`)
-    match: Host(`whoami.traefik-system.hubus.rymcg.tech`)
+    match: Host(`$WHOAMI_DOMAIN`)
     services:
     - name: whoami-test
       port: 80
   tls:
     secretName: whoami-tls-secret
     domains:
-      - main: whoami.traefik-system.hubus.rymcg.tech
+      - main: $WHOAMI_DOMAIN

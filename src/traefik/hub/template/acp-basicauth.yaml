@@ -1,0 +1,12 @@
+apiVersion: hub.traefik.io/v1alpha1
+kind: AccessControlPolicy
+metadata:
+  name: whoami-test
+  namespace: traefik-system
+spec:
+  basicAuth:
+    # Create passwords with: htpasswd -nB [USERNAME]
+    #users: "user:$apr1$qs42pk1o$r1igImqwPOBxGOHdnRGRI1,user2:$apr1$hsge07nv$9J6KUZOoHnUxsK1ws3X/z1"
+    users: "${BASIC_AUTH_USERS}"
+    stripAuthorizationHeader: true
+    forwardUsernameHeader: "User"

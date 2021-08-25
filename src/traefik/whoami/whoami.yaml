@@ -36,4 +36,4 @@ spec:
           name: web
         env:
           - name: WHOAMI_NAME
-            value: whoami-test
+            value: ${WHOAMI_NAME}
