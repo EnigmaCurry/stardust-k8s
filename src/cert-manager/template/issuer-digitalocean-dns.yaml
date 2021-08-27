@@ -1,8 +1,7 @@
 apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
+kind: Issuer
 metadata:
   name: digitalocean-dns
-  namespace: cert-manager-system
 spec:
   acme:
     email: ${ACME_EMAIL}
@@ -10,8 +9,11 @@ spec:
     privateKeySecretRef:
       name: digitalocean-dns-acme-account-key
     solvers:
+    - selector:
+        dnsZones:
+          - ${ACME_ZONE}
     - dns01:
-        #cnameStrategy: Follow
+        cnameStrategy: Follow
         digitalocean:
           tokenSecretRef:
             name: digitalocean-dns

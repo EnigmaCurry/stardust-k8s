@@ -120,7 +120,7 @@ cert-manager-system:
 ## https://cert-manager.io/docs/configuration/acme/dns01/
 .ONESHELL:
 cert-manager-issuer-production-digitalocean-dns:
-	ACME_CA_SERVER=https://acme-v02.api.letsencrypt.org/directory
+	ACME_CA_SERVER=https://acme-staging-v02.api.letsencrypt.org/directory
 	@echo "Creating cert-manager ACME DNS01 Challenge Provider for DigitalOcean."
 	@read -p "Your email address ACME_EMAIL: " ACME_EMAIL
 	@echo ""
@@ -131,13 +131,27 @@ cert-manager-issuer-production-digitalocean-dns:
 	@echo "DO_AUTH_TOKEN=$${DO_AUTH_TOKEN}"
 	@echo ""
 	@read -p "Is this correct? (y/N) " ACME_CORRECT
-	export ACME_EMAIL ACME_CA_SERVER DO_AUTH_TOKEN
+	export ACME_EMAIL ACME_CA_SERVER DO_AUTH_TOKEN ACME_ZONE NAMESPACE
 	if [ "$${ACME_CORRECT,,}" = "y" ]; then
-		kubectl -n cert-manager-system create secret generic digitalocean-dns --from-literal=access-token=$${DO_AUTH_TOKEN}
+		kubectl create -n cert-manager-system secret generic digitalocean-dns --from-literal=access-token=$${DO_AUTH_TOKEN}
 		cat src/cert-manager/template/clusterissuer-digitalocean-dns.yaml | envsubst '$$ACME_EMAIL $$ACME_CA_SERVER' | kubectl apply -f -
 	else
 		@echo "Try again later then."
 	fi
+
+#####################################################################
+## This creates a whoami service and Ingress to request a wildcard certificate
+## Traefik will find this if the Ingress provider is turned on:
+##  --providers.kubernetesingress=true
+traefik-system-wildcard-DNS-challenge:
+	@echo "This example uses a wildcard certificate, used for the entire cluster."
+	@echo "Enter the root wildcard DNS name for the cluster (eg *.example.com) :"
+	@read -p "DNS_ZONE: " DNS_ZONE
+	@echo "Enter the whoami-ingress sub-domain (eg whoami.example.com)"
+	@read -p "WHOAMI_DOMAIN: " WHOAMI_DOMAIN
+	export DNS_ZONE WHOAMI_DOMAIN
+	kubectl apply -k src/traefik/whoami-ingress/base
+	cat src/traefik/whoami-ingress/template/whoami-ingress.yaml | envsubst '$$WHOAMI_DOMAIN $$DNS_ZONE' | kubectl apply -f -
 
 #####################################################################
 ## Traefik Proxy
@@ -236,8 +250,8 @@ traefik-system-whoami:
 	@read -p "Enter the domain for the whoami service: " WHOAMI_DOMAIN
 	@read -p "Enter the name reported by the whoami service (eg `test`): " WHOAMI_NAME
 	export WHOAMI_DOMAIN WHOAMI_NAME
-	kubectl apply -k src/traefik/whoami
-	cat src/traefik/whoami/template/whoami-ingress.yaml | envsubst '$$WHOAMI_DOMAIN $$WHOAMI_NAME' | kubectl apply -f -
+	cat src/traefik/whoami/template/whoami.yaml | envsubst '$$WHOAMI_NAME' | kubectl apply -f -
+	cat src/traefik/whoami/template/whoami-ingress.yaml | envsubst '$$WHOAMI_DOMAIN' | kubectl apply -f -
 traefik-system-dashboard:
 	UNIT=deploy/traefik
 	if kubectl -n traefik-system get daemonset/traefik; then UNIT=daemonset/traefik; fi
@@ -272,16 +286,6 @@ traefik-hub-demo-acls:
 	export BASIC_AUTH_USERS
 	cat src/traefik/hub/template/acp-basicauth.yaml | envsubst '$$BASIC_AUTH_USERS' | kubectl apply -f -
 	kubectl -n traefik-system get accesscontrolpolicies.hub.traefik.io whoami-test -o yaml
-
-#####################################################################
-## whoami-ingress - an example Ingress exposed Service
-## Traefik will find this if the Ingress provider is turned on:
-##  --providers.kubernetesingress=true
-whoami-ingress:
-	@read -p "Enter the whoami-ingress domain: " WHOAMI_DOMAIN
-	export WHOAMI_DOMAIN
-	kubectl apply -k src/whoami-ingress/base
-	cat src/whoami-ingress/template/whoami-ingress.yaml | envsubst '$$WHOAMI_DOMAIN' | kubectl apply -f -
 
 #####################################################################
 ## Harbor Docker Registry Proxy Cache

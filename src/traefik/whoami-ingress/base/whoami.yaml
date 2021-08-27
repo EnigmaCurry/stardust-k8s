@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: whoami
-  namespace: whoami-ingress
+  namespace: traefik-system
 spec:
   ports:
   - name: web
@@ -17,7 +17,7 @@ metadata:
   labels:
     app: whoami
   name: whoami
-  namespace: whoami-ingress
+  namespace: traefik-system
 spec:
   replicas: 1
   selector:

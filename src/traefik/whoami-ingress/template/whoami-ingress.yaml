@@ -11,14 +11,16 @@ spec:
   - host: ${WHOAMI_DOMAIN}
     http:
       paths:
-      - pathType: Prefix
+        # Block all paths execept for / (Blocks ddos via /data)
+      - pathType: Exact
         path: /
         backend:
           service:
             name: whoami
             port:
               number: 80
-  tls: # < placing a host in the TLS config will determine what ends up in the cert's subjectAltNames
+  tls:
   - hosts:
-    - ${WHOAMI_DOMAIN}
-    secretName: whoami-tls # < cert-manager will store the created certificate in this secret.
+    # DNS_ZONE can be a wildcard domain *.example.com or the same as WHOAMI_DOMAIN
+    - "${DNS_ZONE}"
+    secretName: whoami-tls 

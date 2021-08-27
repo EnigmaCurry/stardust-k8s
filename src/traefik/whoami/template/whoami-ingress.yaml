@@ -3,9 +3,6 @@ kind: IngressRoute
 metadata:
   name: whoami-test
   namespace: traefik-system
-  annotations:
-    hub.traefik.io/enable-acme: "true"
-    hub.traefik.io/access-control-policy: "whoami-test@traefik-system"
 spec:
   routes:
   - kind: Rule
@@ -14,7 +11,3 @@ spec:
     services:
     - name: whoami-test
       port: 80
-  tls:
-    secretName: whoami-tls-secret
-    domains:
-      - main: $WHOAMI_DOMAIN
