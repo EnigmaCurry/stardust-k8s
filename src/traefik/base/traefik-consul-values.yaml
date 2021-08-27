@@ -1,0 +1,41 @@
+# Traefik Helm values
+image:
+  name: traefik
+  tag: "v2.5"
+volumes:
+   - name: consul-ca-cert
+     mountPath: "/certs/consul-ca/"
+     type: secret
+deployment:
+  kind: DaemonSet
+additionalArguments:
+  # - "--log.level=DEBUG"
+  - "--providers.kubernetesingress=true"
+  ## Forward all HTTP to HTTPs
+  - "--entrypoints.web.http.redirections.entryPoint.to=:443"
+  ## Consul config:
+  # Enable Traefik to use Consul Connect:
+  - "--providers.consulcatalog.connectAware=true"
+  # Traefik routes should only be created for services with explicit `traefik.enable=true` service-tags:
+  - "--providers.consulcatalog.exposedByDefault=false"
+  # For routes that are exposed (`traefik.enable=true`) use Consul Connect by default: 
+  - "--providers.consulcatalog.connectByDefault=true"
+  # Rename the service inside Consul: `traefik-system-ingress`
+  - "--providers.consulcatalog.servicename=traefik-system-ingress"
+  # Connect Traefik to the Consul service:
+  - "--providers.consulcatalog.endpoint.address=consul-server.consul-system.svc.cluster.local:8501"
+  - "--providers.consulcatalog.endpoint.scheme=https"
+  - "--providers.consulcatalog.endpoint.tls.ca=/certs/consul-ca/tls.crt"
+  #### Optional, uncomment to use Consul KV as a configuration provider:
+  ## - "--providers.consul.endpoints=consul-server.consul-system.svc.cluster.local:8501"
+  ## # The key name in Consul KV that traefik will watch:
+  ## - "--providers.consulcatalog.prefix=traefik"
+service:
+  annotations:
+    # Register the service in Consul as `traefik-system-ingress`:
+    consul.hashicorp.com/service-sync: "true"
+    consul.hashicorp.com/service-name: "traefik-system-ingress"
+ports:
+  websecure:
+    tls:
+      enabled: true

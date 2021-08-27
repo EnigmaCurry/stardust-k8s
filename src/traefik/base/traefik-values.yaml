@@ -3,7 +3,8 @@ image:
   name: traefik
   tag: "v2.5"
 additionalArguments:
-  - "--log.level=DEBUG"
+  # - "--log.level=DEBUG"
+  - "--providers.kubernetesingress=true"
   ## Forward all HTTP to HTTPs
   - "--entrypoints.web.http.redirections.entryPoint.to=:443"
 deployment:

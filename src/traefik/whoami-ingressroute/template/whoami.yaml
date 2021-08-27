@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: whoami-test
+  name: whoami-${WHOAMI_NAME}
   namespace: traefik-system
 spec:
   ports:
@@ -9,28 +9,28 @@ spec:
     port: 80
     protocol: TCP
   selector:
-    app: whoami-test
+    app: whoami-${WHOAMI_NAME}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: whoami-test
-  name: whoami-test
+    app: whoami-${WHOAMI_NAME}
+  name: whoami-${WHOAMI_NAME}
   namespace: traefik-system
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: whoami-test
+      app: whoami-${WHOAMI_NAME}
   template:
     metadata:
       labels:
-        app: whoami-test
+        app: whoami-${WHOAMI_NAME}
     spec:
       containers:
       - image: containous/whoami
-        name: whoami-test
+        name: whoami-${WHOAMI_NAME}
         ports:
         - containerPort: 80
           name: web

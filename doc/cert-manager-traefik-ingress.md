@@ -9,9 +9,9 @@ any volume, and thereby you can run many identical stateless replicas. In this
 conifguration, Traefik ACME is turned off. You declare your service `Ingress`
 objects, and use cert-manager instead to run ACME and create `Certificate`
 objects in your cluster (cert-manager *does* work in a distributed fashion).
-Traefik will automatically load the certificates from the `Ingress` objects. By
-using a wildcard domain (`*.example.com`) you can re-use this certificate in
-Traefik `IngressRoute` objects as well. 
+Traefik will automatically load the certificates attached to the `Ingress`
+objects. By using a wildcard domain (`*.example.com`) you can re-use this
+certificate in Traefik `IngressRoute` objects as well.
 
 Install Traefik as a DaemonSet (runs a replica on every node) with no ACME
 configured, using only Traefik Default (self-signed) Certificates:
@@ -31,7 +31,7 @@ uses DigitalOcean DNS (to use this, your domain must be hosted on DigitalOcean
 DNS, or you can modify this make target for your own DNS provider):
 
 ```
-make cert-manager-issuer-production-digitalocean-dns 
+make cert-manager-issuer-digitalocean-dns 
 ```
 
 You will be asked for the following info:
@@ -46,7 +46,7 @@ Deploy a service that uses `Ingress` to request a certificate and expose to the
 network via Traefik:
 
 ```
-make whoami-ingress-wildcard-DNS-challenge
+make traefik-system-wildcard-DNS-challenge
 ```
 
 You will be asked for the following info:
@@ -61,8 +61,23 @@ Open the Traefik dashboard to check the route is created:
 make traefik-system-dashboard
 ```
 
-Test curl:
+Test curl (replace with your domain):
 
 ```
+curl -vIIk https://whoami.example.com
+```
+
+You should see the `Server certificate` defails with the `subject:
+CN=*.example.com` indicating that it is a wildcard certificate.
+
+Deploy an additional whoami service, this time with an `IngressRoute`:
 
 ```
+make traefik-system-whoami
+```
+
+ * For `WHOAMI_DOMAIN` enter a valid subdomain of the `DNS_ZONE` created
+   previously.
+
+Test with curl to the new whoami, and you should see the same wildcard
+certifcate returned as before.

@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: whoami-wildcard-root
+  name: whoami-test-${WHOAMI_NAME}
   namespace: traefik-system
 spec:
   ports:
@@ -9,31 +9,31 @@ spec:
     port: 80
     protocol: TCP
   selector:
-    app: whoami
+    app: whoami-test
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: whoami
-  name: whoami-wildcard-root
+    app: whoami-test-${WHOAMI_NAME}
+  name: whoami-test
   namespace: traefik-system
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: whoami
+      app: whoami-test
   template:
     metadata:
       labels:
-        app: whoami
+        app: whoami-test
     spec:
       containers:
       - image: containous/whoami
-        name: whoami
+        name: whoami-test
         ports:
         - containerPort: 80
           name: web
         env:
           - name: WHOAMI_NAME
-            value: traefik-system
+            value: ${WHOAMI_NAME}

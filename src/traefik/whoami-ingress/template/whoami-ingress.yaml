@@ -4,8 +4,8 @@ metadata:
   annotations:
     # add an annotation indicating the issuer to use.
     cert-manager.io/cluster-issuer: digitalocean-dns
-  name: whoami-ingress
-  namespace: whoami-ingress
+  name: whoami-wildcard-root
+  namespace: traefik-system
 spec:
   rules:
   - host: ${WHOAMI_DOMAIN}
@@ -16,11 +16,11 @@ spec:
         path: /
         backend:
           service:
-            name: whoami
+            name: whoami-wildcard-root
             port:
               number: 80
   tls:
   - hosts:
     # DNS_ZONE can be a wildcard domain *.example.com or the same as WHOAMI_DOMAIN
     - "${DNS_ZONE}"
-    secretName: whoami-tls 
+    secretName: whoami-wildcard-root-tls 

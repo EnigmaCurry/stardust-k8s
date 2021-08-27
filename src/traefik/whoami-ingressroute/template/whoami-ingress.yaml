@@ -1,7 +1,7 @@
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
-  name: whoami-test
+  name: whoami-${WHOAMI_NAME}
   namespace: traefik-system
 spec:
   routes:
@@ -9,5 +9,5 @@ spec:
     #match: HostRegexp(`whoami.traefik-system.{domain:.*}`)
     match: Host(`$WHOAMI_DOMAIN`)
     services:
-    - name: whoami-test
+    - name: whoami-${WHOAMI_NAME}
       port: 80
